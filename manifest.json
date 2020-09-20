@@ -1,6 +1,6 @@
 {
    "name": "Tab Commander",
-   "description": "Extract, concatinate, and consolidate tabs using text or regular expressions, all from the OmniBox",
+   "description": "Extract, consolidate, sort, merge, and discard tabs - in the active window or all - using text or regular expressions, all from the OmniBox!",
    "version": "1.0",
    "permissions": [
       "storage",
@@ -13,9 +13,14 @@
    "omnibox": { "keyword" : "tab" },
    "manifest_version": 2,
    "browser_action": {
+     "default_popup": "popup.html",
      "default_icon": {
        "16": "icon_016.png",
-       "32": "icon_032.png"
+       "32": "icon_032.png",
+       "48": "icon_048.png",
+       "64": "icon_064.png",
+       "128": "icon_128.png",
+       "256": "icon_256.png"
        }
    },
    "icons": {

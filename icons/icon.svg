@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs/>
+  <defs>
+    <linearGradient id="a" x1="19.2" x2="108.8" y2="128" gradientUnits="userSpaceOnUse">
+      <stop offset=".1" stop-color="#979797"/>
+      <stop offset=".4" stop-color="#d1d1d1"/>
+      <stop offset=".7" stop-color="#6c6c6c"/>
+      <stop offset=".8" stop-color="#efefef"/>
+      <stop offset=".8" stop-color="#efefef"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#a)" fill-rule="evenodd" stroke="#303590" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M128 48v28h-18a47 47 0 01-5 12l13 13-17 17-13-13a48 48 0 01-12 5v18H52v-18a48 48 0 01-12-5l-13 13-17-17 13-13a47 47 0 01-5-12H0V48h20s3 0 3-4L6 27 27 6l17 17c4 0 4-3 4-3V0h32v20s0 3 4 3l17-17 21 21-17 17c0 4 3 4 3 4h20zM77 64a13 13 0 10-13 13 13 13 0 0013-13z"/>
+  <path fill="#303590" fill-rule="evenodd" d="M128 48v28h-18a47 47 0 01-5 12l13 13-17 17-13-13a48 48 0 01-12 5v18H52v-18a48 48 0 01-12-5l-13 13-17-17 13-13a47 47 0 01-5-12H0V48h20s3 0 3-4L6 27 27 6l17 17c4 0 4-3 4-3V0h32v20s0 3 4 3l17-17 21 21-17 17c0 4 3 4 3 4h20zM77 64a13 13 0 10-13 13 13 13 0 0013-13z" opacity=".2"/>
+  <path fill-rule="evenodd" d="M105 52l1-1a4 4 0 002 1h20v4h-20s-3 0-3-4zm-4-38L84 31c-4 0-4-3-4-3V4H48V0h32v24s0 3 4 3l17-17 21 21-2 2zM48 28s0 3-4 3L27 14 8 33l-2-2 21-21 17 17c4 0 4-3 4-3v4zM22 51l1 1c0 4-3 4-3 4H0v-4h20a4 4 0 002-1zm1 45l-11 11-2-2 11-11 2 2zm84-2l11 11-2 2-11-11 2-2zm-43-9a13 13 0 01-13-15 13 13 0 0026 0 13 13 0 01-13 15z" opacity=".7"/>
+  <path fill="#fff" fill-rule="evenodd" d="M105 52l1-1a4 4 0 002 1h20v4h-20s-3 0-3-4zm-4-38L84 31c-4 0-4-3-4-3V4H48V0h32v24s0 3 4 3l17-17 21 21-2 2zM48 28s0 3-4 3L27 14 8 33l-2-2 21-21 17 17c4 0 4-3 4-3v4zM22 51l1 1c0 4-3 4-3 4H0v-4h20a4 4 0 002-1zm1 45l-11 11-2-2 11-11 2 2zm84-2l11 11-2 2-11-11 2-2zm-43-9a13 13 0 01-13-15 13 13 0 0026 0 13 13 0 01-13 15z" opacity=".4"/>
+  <path fill="#fff" fill-rule="evenodd" d="M105 48l1-1a4 4 0 002 1h20v4h-20s-3 0-3-4zM80 20s0 3 4 3l17-17 21 21-2 2-19-19-17 17c-4 0-4-3-4-3m-32 0s0 3-4 3L27 10 8 29l-2-2L27 6l17 17c4 0 4-3 4-3v4zM22 47l1 1c0 4-3 4-3 4H0v-4h20a4 4 0 002-1zm1 45l-11 11-2-2 11-11 2 2zm84-2l11 11-2 2-11-11 2-2zm-43-9a13 13 0 01-13-15 13 13 0 0026 0 13 13 0 01-13 15z" opacity=".5"/>
+  <path fill-rule="evenodd" d="M110 76a47 47 0 01-3 10l-2-2a47 47 0 005-12h18v4h-18zm-5-36l15-15 2 2-16 16a4 4 0 01-1-3zM23 84l-2 2a47 47 0 01-3-10H0v-4h18a47 47 0 005 12zm4 30l13-13a48 48 0 0012 5v4a48 48 0 01-12-5l-13 13-17-17 2-2zm49 14H52v-4h24v4zM64 47a13 13 0 0113 15 13 13 0 00-26 0 13 13 0 0113-15zm-42-4L6 27l2-2 15 15a4 4 0 01-1 3zm26-27V0v16zm28 90a48 48 0 0012-5l13 13 15-15 2 2-17 17-13-13a48 48 0 01-12 5v-4z" opacity=".5"/>
+  <path fill-rule="evenodd" d="M110 80a47 47 0 01-3 10l-2-2a47 47 0 005-12h18v4h-18zm-5-36l15-15 2 2-16 16a4 4 0 01-1-3zM23 88l-2 2a47 47 0 01-3-10H0v-4h18a47 47 0 005 12zm4 30l13-13a48 48 0 0012 5v4a48 48 0 01-12-5l-13 13-17-17 2-2zm49 14H52v-4h24v4zM64 51a13 13 0 0113 15 13 13 0 00-26 0 13 13 0 0113-15zm-42-4L6 31l2-2 15 15a4 4 0 01-1 3zm26-27V4v16zm28 90a48 48 0 0012-5l13 13 15-15 2 2-17 17-13-13a48 48 0 01-12 5v-4z"/>
+  <circle cx="64" cy="64" r="16" fill="#fff" stroke="#5b5b5b" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" opacity=".5"/>
+  <path fill="#00b0ed" fill-rule="evenodd" stroke="#003a65" stroke-linecap="round" stroke-linejoin="round" stroke-width="8" d="M24 64h80c11 0 16 9 16 20v28l8 8v8H0v-8l8-8V84c0-11 5-20 16-20z" data-name="Rounded Rectangle 1"/>
+  <path fill="#00b0ed" fill-rule="evenodd" stroke="#003a65" stroke-linecap="round" stroke-linejoin="round" stroke-width="8" d="M12 112h104l4 8H8z" data-name="Rounded Rectangle 2" opacity=".5"/>
+  <path fill="#fff" fill-rule="evenodd" d="M96 96a8 8 0 010 16H80V80h16c10 0 12 16 0 16zm0 6s-8-4-8 0c0 5 8 0 8 0zm-8-12c0 5 8 0 8 0s-8-4-8 0zm-20 14h-8v8h-8V96l8-16h8l8 16v16h-8v-8zm-4-14l-4 6h8zm-20 22h-8V88h-8v-8h24v8h-8v24z"/>
+  <path fill="#003a65" fill-rule="evenodd" d="M32 88h4v24h-4V88zm-8-12h24v4H24v-4zm0 0h4v12h-4V76zm4 12h8v4h-8v-4zm32 16h8v4h-8v-4zm4 0h4v8h-4v-8zm-4-12h4v4h-4v-4zm4 0h4v4h-4v-4zm-16 0h4v20h-4V92zm4-4h4v4h-4v-4zm4-12h12v4H56v-4zm0 4h4v4h-4v-4zm-4 4h4v4h-4v-4zm24-8h4v36h-4V76zm4 0h16v4H80v-4zm8 12h4v4h-4v-4zm0 12h4v4h-4v-4z"/>
+  <path fill="#003a65" fill-rule="evenodd" d="M92 88h4v4h-4v-4zm0 12h4v4h-4v-4zm8-20h4v4h-4v-4zm-4-4h4v4h-4v-4zm4 20h4v4h-4v-4zM68 80h4v4h-4v-4zm4 4h4v8h-4v-8zm-24-8h4v4h-4v-4zm-4 12h8v4h-8v-4z" opacity=".5"/>
+</svg>
