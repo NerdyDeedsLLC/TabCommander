@@ -3,6 +3,7 @@
    "description": "Extract, consolidate, sort, merge, and discard tabs - in the active window or all - using text or regular expressions, all from the OmniBox!",
    "version": "1.0",
    "permissions": [
+      "activeTab",
       "storage",
       "tabs"
     ],
@@ -15,18 +16,18 @@
    "browser_action": {
      "default_popup": "popup.html",
      "default_icon": {
-       "16": "icon_016.png",
-       "32": "icon_032.png",
-       "48": "icon_048.png",
-       "64": "icon_064.png",
-       "128": "icon_128.png",
-       "256": "icon_256.png"
+       "16": "icons/icon_016.png",
+       "32": "icons/icon_032.png",
+       "48": "icons/icon_048.png",
+       "64": "icons/icon_064.png",
+       "128": "icons/icon_128.png",
+       "256": "icons/icon_256.png"
        }
    },
    "icons": {
-     "16": "icon_016.png",
-     "32": "icon_032.png",
-     "48": "icon_048.png",
-     "128": "icon_128.png"
+     "16": "icons/icon_016.png",
+     "32": "icons/icon_032.png",
+     "48": "icons/icon_048.png",
+     "128": "icons/icon_128.png"
    }
  }

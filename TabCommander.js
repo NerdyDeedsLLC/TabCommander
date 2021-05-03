@@ -1,5 +1,5 @@
 console.clear();
-const EXTENSION_DEBUG_MODE = false;
+const EXTENSION_DEBUG_MODE = true;
 if(!EXTENSION_DEBUG_MODE) console.log = ()=>{};
 
 (() => {
@@ -31,6 +31,8 @@ if(!EXTENSION_DEBUG_MODE) console.log = ()=>{};
             }
             this.setBaseState()
             this.gatherWindowAndTabState();
+
+            
             console.log = console.log.bind(this);
         }
 
@@ -86,6 +88,13 @@ if(!EXTENSION_DEBUG_MODE) console.log = ()=>{};
         */
         sortJSONObjByProperty(o,p,c,f=c?v=>v:v=>(v?v.toUpperCase():'')){ return o.sort((a,b,x=f(a[p]),y=f(b[p]))=>1+~~(y<x)+~(y>x)); }
 
+        /*
+        @   Filters the list of all TabCommander actions (this.supportedActions) down to those that begin with text q
+        @   @param      [string]     q     The string to match against this.supportedActions' keys
+        @   @returns    [String]           this.supportedActions reduced to those elements that match the query
+        */
+        getActionsMatchingQuery(q){return Object.keys(this.supportedActions).filter(action=>new RegExp(`^${q}.*$`, 'i').test(action))}
+
         setExtensionIconBadge(text='',...bgcolor){                                                                                              // @ Sets the extension's icon badge's text and background color @ //
             bgcolor=((bgcolor && Array.isArray(bgcolor[0])) ? bgcolor.pop() : bgcolor) || [];
             bgcolor = [...[bgcolor].flat(), ...new Array(4).fill(0)].splice(0,4)
@@ -93,8 +102,6 @@ if(!EXTENSION_DEBUG_MODE) console.log = ()=>{};
             
         }
         clearExtensionIconBadge(){ return Promise.resolve(this.setExtensionIconBadge()); }                                                      // @ Clears/resets the extension's icon badge's text and background color @ //
-
-        
 
         // ############################ //
         // ## CORE EXTENSION METHODS ## //
@@ -176,76 +183,102 @@ if(!EXTENSION_DEBUG_MODE) console.log = ()=>{};
             let qtMods = [];
 
             // ## PROMISARY CHAIN ##//
-            return this.gatherWindowAndTabState()                                                                         // # Initiate the promisary chain, starting with gathering the current "state" of the Chrome instance... # //
+            return this.gatherWindowAndTabState()                                                                                               // # Initiate the promisary chain, starting with gathering the current "state" of the Chrome instance... # //
 
             .then(() => this.retrieveData(['previousAction', 'previousQuery'], ''))                                                             // # Retrieve previous call from Chrome API Sync Storage for use as the default menu action
 
             .then(() => {                                                                                                                       // # ...next, parse the user's input to ascertain what "flavor" of a regex search are we conducting: # //
-                this.rawUserInput  = filterString;                                      // (# Store a copy of the original search text (in case this is a pure RegEx query )
-                console.log('filterString :', filterString);
-                this.invertResults = /^!!/.test(filterString);                          // (# Test to see if the results should be inverted right off the bat )
-                filterString       = filterString.replace(/^!!/,'')                     // (# Strip the leading !! inversion-indicator (we already stored it); it'll confuse the Exclusion flag )
+            /*
+            ...#   Rebuilds the query to allow for the individual exclusion of terms. For example, "!youtube|netflix|video|!vimeo" is interpreted as "EXCLUDE tabs matching 'youtube' AND 'vimeo', INCLUDE tabs matching 'netflix' OR 'video'"
+            ...#   @param    [String]   re   The user input from the Omnibar containing the search criteria we'll use to filter down the array of tabs stored in the class object
+            ...#   @returns  [String]        Either returns re straightaway if no complex conditional criteria are found (i.e. there are no exclusions necessitating logical AND syntax), or a revised version of the string parsed into RegEx format with the conditions laid out efficiently
+            */
+                function convertToComplexConditional(re){
+                    let exclusions = [], inclusions = [];                                               // (# Create collections for the exclusionary and inclusionary rulesets #) //
+                    if(/^\!|\|\!/.test(re)){                                                            // (# If there's a bang at the start of the query (this works because it's the last test) or following a logical OR (|) #) //
+                        re = re.split('|').forEach(subQuery=>{                                          // (# Split the string by pipes (note that this will still produce a 1-length array if no pipe is present) and iterate the results... #) //
+                            if(/^\!/.test(subQuery)) exclusions.push(subQuery.replace(/^\!/, ''));      // (# ... to ascertain IF the string is LED BY A BANG, then strip said bang and add the string to our exclusions... #) //
+                            else inclusions.push(subQuery);                                             // (# ... OTHERWISE if there is NO LEADING BANG, then stuff the string as inputted into our inclusions. #) //
+                        });
+                        re = `^(?!.*(?:${exclusions.join('|')})).*(${inclusions.join('|')}).*`          // (# Finally, rebuild the query, stringing all exclusions together as a negative lookahead prefixing an OR delimited set of our inclusions #) //
+                    }
+                    if(EXTENSION_DEBUG_MODE){
+                        var ins,                                     exs = (!!exclusions.length) 
+                                                                        ? '"' + exclusions.join('" and "') + '"'
+                                                                        : '<nothing>';
+                        if(!inclusions.length && !exclusions.length) ins = '"' + re.replace(/\|/g, '" or "') + '"';
+                        else                                         ins = (!!inclusions.length) 
+                                                                        ? '"' + inclusions.join('" or "') + '"'
+                                                                        : '<nothing>';
+                        console.log('Complex conditional:', new RegExp(re), '(Excludes: ' + exs + ', Requires: ' + ins + ')');
+                    }
+                    return re;
+                }
 
-                this.uniqueResults = this.startGroupingTest('#', filterString);         // (# Test to see if we're returning unique results only )
-                filterString = filterString.replace(/^\\|(?<! )([\\#])|[\(\)]/g, '')    // (# Strip: first-char backslashes, prefix grouping octocets, ALL parentheses... )
-                                           .replace(/\|{2,}/g, '|')                     // (# ... then convert any logical OR's (||) to RegEx OR's (|)... )
-                                           .replace(/"/gim, "\\b")                      // (# ... and finally replace all double-quotes (") with RegEx word delimiters (\b), since neither Title nor URL should have 'em )
+                this.rawUserInput  = filterString;                                                      // (# Store a copy of the original search text (in case this is a pure RegEx query #) //
+                console.log('filterString :', filterString);
+                this.invertResults = /^!!/.test(filterString);                                          // (# Test to see if the results should be inverted right off the bat #) //
+                filterString       = filterString.replace(/^!!/,'')                                     // (# Strip the leading !! inversion-indicator (we already stored it); it'll confuse the Exclusion flag, which CAN be used in conjunction with inversion #) //
+                this.uniqueResults = this.startGroupingTest('#', filterString);                         // (# Test to see if we're returning unique results only #) //
+                filterString = filterString.replace(/^\\|(?<! )([\\#])|[\(\)]/g, '')                    // (# Strip: first-char backslashes, prefix grouping octocets, ALL parentheses... #) //
+                                           .replace(/\|{2,}/g, '|')                                     // (# ... then convert any logical OR's (||) to RegEx OR's (|; this is just me being nice to devs... #) //
+                                           .replace(/"/gim, "\\b")                                      // (# ... and finally replace all double-quotes (") with RegEx word delimiters (\b), since neither Title nor URL should have 'em #) //
                 this.parsedTextInput = filterString;
 
 
                 // ## ACTION EVALUATION ##  //
-                if(this.rawUserInput.charAt(0) === '/'){                                                                                                // #  1. Is the input to be evaluated UNCHANGED, as a LITERAL REGULAR EXPRESSION?    [[[  TRIGGER: / @ char(0) ]]]  # //
+                
+                if(this.rawUserInput.charAt(0) === '/'){                                                                                                // #  1. Is the input to be evaluated UNCHANGED, as a LITERAL REGULAR EXPRESSION?    [[[ ®    TRIGGER: / @ char(0) ]]]  # //
                     qtMods.push('®');
-                    this.rawUserInput.replace(/(?<=^)(?:\/)?(.*?)\/?(?:(?<=\/)([gim]*))?$/g, (...m)=>this.userInputRegEx = new RegExp(m[1], m[2]||'')); // (# Strip the first/last char if either/both are slashes, and tack on whatever flags follow the final /, if present
+                    this.rawUserInput.replace(/(?<=^)(?:\/)?(.*?)\/?(?:(?<=\/)([gim]*))?$/g, (...m)=>this.userInputRegEx = new RegExp(m[1], m[2]||'')); //      (# Strip the first/last char if either/both are slashes, and tack on whatever flags follow the final /, if present
 
-                }else{                                                                                                                                  // ...#   === OR, if NOT a Literal Expressions (those being incompatable with ALL OTHER FLAGS)... ===   #... //
+                }else{                                                                                                                                  // ...#   === OR, if NOT a Literal Expressions (those being incompatable with ALL OTHER FLAGS) Switch to SimplEx... ===   #... //
+                    qtMods.push('🔰');                                                                                                                  //      (# Insert the SimplEx Symbol                                                [[[  🔰   TRIGGER: Any query NOT USING TRUE REGEX ]]]  #) //
 
-                    if(this.invertResults)      qtMods.push('▷◀︎');                                                                                      // #   2a. Are the results INVERTED?    [[[ TRIGGER: !! at START of string ]]]  # //
+                    if(this.invertResults)      qtMods.push('🔳🔲');                                                                                    // #   2a. Are the results INVERTED?                                                [[[ 🔳🔲  TRIGGER: !! at START of string ]]]  # //
 
-                    else if(this.uniqueResults) qtMods.push('1️⃣');                                                                                      // #   OR 2b. Return ONLY UNIQUE matches (Which is INCOMPATABLE with INVERSION)?    [[[  TRIGGER: #  ]]]  # //
+                    else if(this.uniqueResults) qtMods.push('1️⃣');                                                                                      // #   OR 2b. Return ONLY UNIQUE matches (Which is INCOMPATABLE with INVERSION)?    [[[  1️⃣    TRIGGER: # in PREFIX FLAGS at START of string ]]]  # //
 
-                    if(/\|/.test(filterString)) qtMods.push('➕');                                                                                      // #   3. Are there MULTIPLE SEARCH CONDITIONS?    [[[  TRIGGER: | in ANY POSITION  ]]]  #//
+                    if(/\|/.test(filterString)) qtMods.push('➕');                                                                                      // #   3. Are there MULTIPLE SEARCH CONDITIONS?                                     [[[  ➕   TRIGGER: | in ANY POSITION  ]]]  #//
 
-                    if(/"/.test(filterString))  qtMods.push('❞');                                                                                       // #   4. Return only WHOLE-WORD matches?    [[[  TRIGGER: "" WRAPPING A WORD  ]]]  # //
+                    if(/"/.test(filterString))  qtMods.push('❞');                                                                                       // #   4. Return only WHOLE-WORD matches?                                            [[[  ❞    TRIGGER: "" WRAPPING A WORD  ]]]  # //
 
-                    if(this.startGroupingTest('', filterString)){
-                        if(this.startGroupingTest('=', filterString)){                                                                                  // #    and/or 5. Return only CASE-SENSITIVE matches?   [[[ TRIGGER: =  ]]]  # //
+                    if(this.startGroupingTest('', filterString)){                                                                                       //      (# Side note: passing a blank string to startGroupingTest checks to see if there are ANY valid prefix flags ) # //
+                        if(this.startGroupingTest('=', filterString)){                                                                                  // #    and/or 5. Return only CASE-SENSITIVE matches?                                [[[  🔤   TRIGGER: = in PREFIX FLAGS at START of string  ]]]  # //
                             qtMods.push('🔤');
                             this.caseSensitiveRE = true;
                         }
-                        if(this.startGroupingTest('!', filterString)){                                                                                  // #    and/or 6. Treat search terms as EXCLUSIONS?   [[[  TRIGGER: !  ]]]  # //
-                            // &    ENHANCEMENT: adjust so bangs (!) are accepted from start grouping    && //
-                            // &    & ALSO following a logical "or" (|) to allow for mixed conditions    && //
+                        if(/\!/.test(filterString)){                                                                                                    // #    and/or 6. Are there EXCLUSIONS?                                              [[[  ❗️   TRIGGER: !  ]]]  # //
+                            filterString = convertToComplexConditional(filterString);                                                                   //      (# ...cuz if so, we gotta switch the user's query to a complex conditional #) //
                             qtMods.push('❗️');
-                            filterString = `^((?!(?:${filterString})).)*$`;
                         }else
                             qtMods.push('🔍');
 
                         this.userInputRegEx = new RegExp(filterString, this.caseSensitiveRE ? '' : 'i');
 
-                    }else {                                                                                                                             // #    OR 7. NONE of the above; just run a vanilla INCLUSIVE search?   [[[  TRIGGER: DEFAULT BEHAVIOR  ]]]  # //
+                    }else {                                                                                                                             // #    OR 7. NONE of the above; just run a vanilla INCLUSIVE search?                [[[  🔍   TRIGGER: DEFAULT BEHAVIOR (or simply a VANILLA SEARCH)  ]]]  # //
                         qtMods.push('🔍')
                         this.userInputRegEx   = new RegExp(filterString, 'i');
                     }
                 }
 
-                                                                                                                                                        // #    Now FIND OUT MATCHES!    # //
-                this.userInputIcons = qtMods.join('');                                                                                                       // ...# Join all the ASCII icons (*SIGH* fine: they're "emoji". Ew.) into one string... #) //
+                                                                                                                                                        // #    Now FIND OUR MATCHES!    # //
+                this.userInputIcons = qtMods.join('');                                                                  // (# Join all the ASCII icons (*SIGH* fine: they're "emoji". Ew.) into one string. #) //
                 let userRE      = this.userInputRegEx,
                     currWinTabs = 0,
                     isInCurrWin = false;
                 console.log('userRE :', userRE);
 
-                this.tabs.forEach(tab=>{                                                                                                                // ...# filter out the tabs that match the constructed Regular Expression... #) //
+                this.tabs.forEach(tab=>{                                                                                // (# Filter out the tabs that match the constructed Regular Expression... #) //
                     isInCurrWin = false;
                     if(tab.windowId === this.activeWindowID) {
                         isInCurrWin = true;
                         currWinTabs++;
                     }
-                    if  (((userRE.test(tab.title) || userRE.test(tab.url)) === !this.invertResults) &&                 // (# ...by testing if either the URL or the title match (or don't match, if an inversion)... #) //
-                        (!this.uniqueResults || !!this.allFilteredTabs.filter(ft=>ft.url === tab.url).length)) {       // (# ...then by excluding any matches whose URL's are duplicates (if that flag's set)... #) //
-                            this.allFilteredTabs.push(tab);                                                            // (# ...and shoving them into a collection inside the class. #) //
-                            if(isInCurrWin) this.winFilteredTabs.push(tab);                                            // (# ...if it happens to be in the currently-active window, add it to that collection, too. #) //
+                    if  (((userRE.test(tab.title) || userRE.test(tab.url)) === !this.invertResults) &&                  // (# ...by testing if either the URL or the title match (or don't match, if an inversion)... #) //
+                        (!this.uniqueResults || !!this.allFilteredTabs.filter(ft=>ft.url === tab.url).length)) {        // (# ...then by excluding any matches whose URL's are duplicates (if that flag's set)... #) //
+                            this.allFilteredTabs.push(tab);                                                             // (# ...and shoving them into a collection inside the class. #) //
+                            if(isInCurrWin) this.winFilteredTabs.push(tab);                                             // (# ...if it happens to be in the currently-active window, add it to that collection, too. #) //
                         }
                 });
                 this.currWinTabCount = currWinTabs;
@@ -255,7 +288,7 @@ if(!EXTENSION_DEBUG_MODE) console.log = ()=>{};
             })
 
 
-            .then(()=>this.generateMenu(CAPI_displaySuggestion, console.log(Object.assign({},this))));                                                  // #    Finally, generate and display the menu of actions to the user    # //
+            .then(()=>this.generateMenu(CAPI_displaySuggestion, console.log(Object.assign({},this))));                                                  // #    FINALLY, GENERATE and DISPLAY the MENU of actions to the user    # //
         }
 
 
@@ -271,12 +304,19 @@ if(!EXTENSION_DEBUG_MODE) console.log = ()=>{};
             const buildMenuItem = (keyword, matchCount, twCountData, condition=false) => {
                 if(!condition) return false;
                 let menuObj = {};
-                menuObj.content     = `${keyword} ${matchCount} matching tabs.`
+                let isActionMatch   = this.getActionsMatchingQuery(this.rawUserInput);
+                console.log('isActionMatch :', isActionMatch, isActionMatch.join());
+                isActionMatch   = !~(isActionMatch.join().indexOf(keyword))
+                console.log('isActionMatch :', isActionMatch);
+                menuObj.content     = `${keyword} ${matchCount} matching tabs.`;
                 menuObj.description = this.actionASCIIicons[keyword] + ' [' + keyword.toUpperCase() + '] ' + this.supportedActions[keyword].replace(/%%(.+?)%%/g, (...m) => twCountData[m[1]]);
-                omniBarMenuOutput.push(menuObj);
+                if(isActionMatch) omniBarMenuOutput.push(menuObj);
+                            else  omniBarActionBypass.unshift(menuObj);
+                return true;
             }
 
             var omniBarMenuOutput = [],
+                omniBarActionBypass = [],
                 twCountData = {
                     totTabCount          : this.tabs.length,
                     currWinTabCount      : this.currWinTabCount,
@@ -286,6 +326,7 @@ if(!EXTENSION_DEBUG_MODE) console.log = ()=>{};
                     curWinMatchCount     : this.winFilteredTabs.length,
                     segDomainCount       : this.uniqueDomainSet.length
                 },
+
                 defSuggestionText    = (twCountData.totMatchCount < 1 || this.rawUserInput === '')
                 ? `0 matching tabs. Refine your expression (or hit ENTER to repeat the last query  [[${this.previousAction.toUpperCase()}] :: '${this.previousQuery}]  or ESC to abort).`
                 : `${this.userInputIcons + this.allFilteredTabs.length} matching tabs. Select action below (or Enter ${
@@ -295,13 +336,13 @@ if(!EXTENSION_DEBUG_MODE) console.log = ()=>{};
                 })`;
 
             console.log('twCountData :', twCountData);
-            buildMenuItem("Isolate",   twCountData.totMatchCount,    twCountData, (!!twCountData.totMatchCount));
             buildMenuItem("Extract",   twCountData.curWinMatchCount, twCountData, (!!twCountData.curWinMatchCount));
+            buildMenuItem("Isolate",   twCountData.totMatchCount,    twCountData, (!!twCountData.totMatchCount));
             buildMenuItem("Merge",     twCountData.curWinMatchCount, twCountData, (twCountData.totMatchCount > twCountData.curWinMatchCount));
-            buildMenuItem("Sort",      twCountData.currWinTabCount,  twCountData, (twCountData.currWinTabCount > 1));
             buildMenuItem("Discard",   twCountData.totMatchCount,    twCountData, (!!twCountData.totMatchCount));
-            buildMenuItem("Segregate", twCountData.segDomainCount,   twCountData, (twCountData.segDomainCount > 1));
+            buildMenuItem("Sort",      twCountData.currWinTabCount,  twCountData, (twCountData.currWinTabCount > 1));
             buildMenuItem("Unify",     twCountData.totTabCount,      twCountData, (twCountData.totWindowCount > 1));
+            buildMenuItem("Segregate", twCountData.segDomainCount,   twCountData, (twCountData.segDomainCount > 1));
 
             chrome.omnibox.setDefaultSuggestion({description:defSuggestionText})
 
@@ -311,7 +352,10 @@ if(!EXTENSION_DEBUG_MODE) console.log = ()=>{};
                                                 : `${twCountData.totMatchCount}/${twCountData.totTabCount}`,
                                             [Math.round((twCountData.totMatchCount/twCountData.totTabCount) * 100),100,0,255])
             }else this.setExtensionIconBadge('NONE', 100,100,100,255);
-            CAPI_displaySuggestion(omniBarMenuOutput);
+            console.log('omniBarActionBypass :', omniBarActionBypass);
+            console.log('omniBarMenuOutput :', omniBarMenuOutput);
+            console.log('[...omniBarActionBypass, ...omniBarMenuOutput] :', [...omniBarActionBypass, ...omniBarMenuOutput]);
+            CAPI_displaySuggestion([...omniBarActionBypass, ...omniBarMenuOutput]);
         }
 
         failAction(errType) {
